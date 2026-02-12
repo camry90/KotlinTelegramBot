@@ -7,7 +7,7 @@ import java.io.IOException
 data class Word(
     val original: String,
     val translate: String,
-    val correctAnswer: Int = 0,
+    val correctAnswerCount: Int = 0,
 )
 
 fun main() {
@@ -26,8 +26,12 @@ fun main() {
 
     try {
         for (line in wordsFile.readLines()) {
-            val line = line.split("|")
-            val word = Word(line[0], line[1], line[2].toIntOrNull() ?: 0)
+            val parts = line.split("|")
+            if (parts.size < 2) continue
+            val correct = if (parts.size > 2) {
+                parts[2].toIntOrNull() ?: 0
+            } else 0
+            val word = Word(parts[0], parts[1], correct)
             dictionary.add(word)
         }
         dictionary.forEach { println(it) }
