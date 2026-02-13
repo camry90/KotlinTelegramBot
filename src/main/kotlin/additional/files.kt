@@ -28,9 +28,7 @@ fun main() {
         for (line in wordsFile.readLines()) {
             val parts = line.split("|")
             if (parts.size < 2) continue
-            val correct = if (parts.size > 2) {
-                parts[2].toIntOrNull() ?: 0
-            } else 0
+            val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
             val word = Word(parts[0], parts[1], correct)
             dictionary.add(word)
         }
