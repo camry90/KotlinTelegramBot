@@ -10,9 +10,9 @@ data class Word(
     val correctAnswerCount: Int = 0,
 )
 
-fun main() {
+fun loadDictionary(): MutableList<Word> {
 
-    val wordsFile: File = File("words.txt")
+    val wordsFile = File("words.txt")
 
     try {
         if (!wordsFile.exists()) {
@@ -32,8 +32,40 @@ fun main() {
             val word = Word(parts[0], parts[1], correct)
             dictionary.add(word)
         }
-        dictionary.forEach { println(it) }
     } catch (e: FileNotFoundException) {
         println("Ошибка вывода строки: ${e.message}")
+    }
+    return dictionary
+}
+
+fun main() {
+
+    val dictionary = loadDictionary()
+    dictionary.forEach { println(it) }
+
+    while (true) {
+        println(
+            "Меню: \n" +
+                    "1 – Учить слова\n" +
+                    "2 – Статистика\n" +
+                    "0 – Выход"
+        )
+
+        val userChoice = readlnOrNull()?.toIntOrNull()
+
+        when (userChoice) {
+            1 -> {
+                println("Вы выбрали учить слова")
+                continue
+            }
+
+            2 -> {
+                println("Вы выбрали вывод статистики")
+                continue
+            }
+
+            0 -> break
+            else -> println("Введите 1, 2 или 0")
+        }
     }
 }
