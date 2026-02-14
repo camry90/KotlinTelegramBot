@@ -59,7 +59,10 @@ fun main() {
             }
 
             2 -> {
-                println("Вы выбрали вывод статистики")
+                val learnedCount = dictionary.filter { it.correctAnswerCount >= 3 }.size
+                val totalCount = dictionary.count()
+                val percent = learnedCount * 100 / totalCount
+                println("Выучено $learnedCount из $totalCount | $percent%\n")
                 continue
             }
 
