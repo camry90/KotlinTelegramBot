@@ -41,7 +41,6 @@ fun loadDictionary(): MutableList<Word> {
 fun main() {
 
     val dictionary = loadDictionary()
-    dictionary.forEach { println(it) }
 
     while (true) {
         println(
