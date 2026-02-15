@@ -4,6 +4,8 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 
+const val LEARNED_NUMBER = 3
+
 data class Word(
     val original: String,
     val translate: String,
@@ -59,9 +61,9 @@ fun main() {
             }
 
             2 -> {
-                val learnedCount = dictionary.filter { it.correctAnswerCount >= 3 }.size
+                val learnedCount = dictionary.filter { it.correctAnswerCount >= LEARNED_NUMBER }.size
                 val totalCount = dictionary.count()
-                val percent = learnedCount * 100 / totalCount
+                val percent = if (totalCount > 0) learnedCount * 100 / totalCount else 0
                 println("Выучено $learnedCount из $totalCount | $percent%\n")
                 continue
             }
