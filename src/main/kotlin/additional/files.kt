@@ -57,27 +57,34 @@ fun main() {
 
         when (userChoice) {
             1 -> {
-                val notLearnedList = dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
-                if (notLearnedList.isNotEmpty()) {
-                    val questionWords = notLearnedList.map { it.translate }
-                        .shuffled()
-                        .take(OPTIONS_NUMBER)
+                while (true) {
+                    val notLearnedList = dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
+                    if (notLearnedList.isNotEmpty()) {
 
-                    val correctWord = notLearnedList.random()
-                    val correctAnswer = correctWord.translate
-                    val options = (questionWords.filter { it != correctAnswer } + correctAnswer).shuffled()
+                        val correctAnswer = notLearnedList.map { it.translate }
+                            .random()
+                        val correctWord = notLearnedList.find { it.translate == correctAnswer }
 
-                    println("${correctWord.original}:")
-                    options.forEachIndexed { index, option ->
-                        println("${index + 1} - $option")
+                        val questionWords = dictionary.map { it.translate }
+                            .distinct()
+                            .filter { it != correctAnswer }
+                            .shuffled()
+                            .take(OPTIONS_NUMBER - 1)
+
+                        val options = (questionWords + correctAnswer).shuffled()
+
+                        println("${correctWord?.original}:")
+                        options.forEachIndexed { index, option ->
+                            println("${index + 1} - $option")
+                        }
+
+                        val userAnswer = readlnOrNull()?.toIntOrNull()
+
+                    } else {
+                        println("Все слова в словаре выучены")
                     }
-
-                    val userAnswer = readlnOrNull()?.toIntOrNull()
-
-                } else {
-                    println("Все слова в словаре выучены")
+                    continue
                 }
-                continue
             }
 
             2 -> {
