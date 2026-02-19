@@ -5,6 +5,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 
 const val LEARNED_NUMBER = 3
+const val OPTIONS_NUMBER = 4
 
 data class Word(
     val original: String,
@@ -56,8 +57,34 @@ fun main() {
 
         when (userChoice) {
             1 -> {
-                println("Вы выбрали учить слова")
-                continue
+                while (true) {
+                    val notLearnedList = dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
+                    if (notLearnedList.isNotEmpty()) {
+
+                        val correctAnswer = notLearnedList.map { it.translate }
+                            .random()
+                        val correctWord = notLearnedList.find { it.translate == correctAnswer }
+
+                        val questionWords = dictionary.map { it.translate }
+                            .distinct()
+                            .filter { it != correctAnswer }
+                            .shuffled()
+                            .take(OPTIONS_NUMBER - 1)
+
+                        val options = (questionWords + correctAnswer).shuffled()
+
+                        println("${correctWord?.original}:")
+                        options.forEachIndexed { index, option ->
+                            println("${index + 1} - $option")
+                        }
+
+                        val userAnswer = readlnOrNull()?.toIntOrNull()
+
+                    } else {
+                        println("Все слова в словаре выучены")
+                    }
+                    continue
+                }
             }
 
             2 -> {
