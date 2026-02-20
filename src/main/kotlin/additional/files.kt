@@ -41,6 +41,13 @@ fun loadDictionary(): MutableList<Word> {
     return dictionary
 }
 
+fun saveDictionary(dictionary: MutableList<Word>) {
+    val string = dictionary.joinToString(separator = "\n") { it ->
+        "${it.original}|${it.translate}|${it.correctAnswerCount}"
+    }
+    File("words.txt").writeText(string)
+}
+
 fun main() {
 
     val dictionary = loadDictionary()
@@ -59,31 +66,47 @@ fun main() {
             1 -> {
                 while (true) {
                     val notLearnedList = dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
-                    if (notLearnedList.isNotEmpty()) {
 
-                        val correctAnswer = notLearnedList.map { it.translate }
-                            .random()
-                        val correctWord = notLearnedList.find { it.translate == correctAnswer }
+                    if (notLearnedList.isEmpty()) {
+                        println("Все слова выучны")
+                        break
+                    }
 
-                        val questionWords = dictionary.map { it.translate }
-                            .distinct()
-                            .filter { it != correctAnswer }
-                            .shuffled()
-                            .take(OPTIONS_NUMBER - 1)
+                    val correctAnswer = notLearnedList.map { it.translate }
+                        .random()
+                    val correctWord = notLearnedList.find { it.translate == correctAnswer }
 
-                        val options = (questionWords + correctAnswer).shuffled()
+                    val questionWords = dictionary.map { it.translate }
+                        .distinct()
+                        .filter { it != correctAnswer }
+                        .shuffled()
+                        .take(OPTIONS_NUMBER - 1)
 
-                        println("${correctWord?.original}:")
-                        options.forEachIndexed { index, option ->
-                            println("${index + 1} - $option")
+                    val options = (questionWords + correctAnswer).shuffled()
+
+                    println("${correctWord?.original}:")
+                    options.forEachIndexed { index, option ->
+                        println("${index + 1} - $option")
+                    }
+                    println(
+                        "---------------------\n" +
+                                "0 - Меню"
+                    )
+                    val correctAnswerId = options.indexOf(correctAnswer)
+
+                    val userAnswerInput = readlnOrNull()?.toIntOrNull()
+                    when (userAnswerInput) {
+                        correctAnswerId + 1 -> {
+                            println("Правильно!")
+                            val indexWord = dictionary.indexOf(correctWord)
+                            val updatedWord = correctWord?.copy(correctAnswerCount = correctWord.correctAnswerCount + 1)
+                            updatedWord?.let { dictionary[indexWord] = it }
+                            saveDictionary(dictionary)
                         }
 
-                        val userAnswer = readlnOrNull()?.toIntOrNull()
-
-                    } else {
-                        println("Все слова в словаре выучены")
+                        0 -> break
+                        else -> println("Неправильно! ${correctWord?.original} - это $correctAnswer")
                     }
-                    continue
                 }
             }
 
