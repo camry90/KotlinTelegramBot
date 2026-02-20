@@ -97,17 +97,16 @@ fun main() {
                     val userAnswerInput = readlnOrNull()?.toIntOrNull()
                     when (userAnswerInput) {
                         correctAnswerId + 1 -> {
-                            println("Правильно")
+                            println("Правильно!")
                             val indexWord = dictionary.indexOf(correctWord)
                             val updatedWord = correctWord?.copy(correctAnswerCount = correctWord.correctAnswerCount + 1)
-                            dictionary[indexWord] = updatedWord!!
+                            updatedWord?.let { dictionary[indexWord] = it }
                             saveDictionary(dictionary)
                         }
 
                         0 -> break
-                        else -> println("Неправильно! $correctWord - это $correctAnswer")
+                        else -> println("Неправильно! ${correctWord?.original} - это $correctAnswer")
                     }
-                    continue
                 }
             }
 
