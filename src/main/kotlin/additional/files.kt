@@ -36,7 +36,6 @@ fun main() {
                 while (true) {
 
                     val question = trainer.getNextQuestion()
-                    val notLearnedList = trainer.dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
 
                     if (question == null) {
                         println("Все слова выучны")
@@ -45,7 +44,6 @@ fun main() {
 
 
                     println(question.asConsoleString())
-                    val correctAnswerId = question.variants.indexOf(question.correctAnswer)
 
                     val userAnswerInput = readlnOrNull()?.toIntOrNull()
 

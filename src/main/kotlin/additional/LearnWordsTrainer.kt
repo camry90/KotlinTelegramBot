@@ -60,8 +60,10 @@ class LearnWordsTrainer {
             correctAnswerId?.plus(1) -> {
                 val indexWord = dictionary.indexOf(question?.correctWord)
                 val updatedWord =
-                    question?.correctWord?.copy(correctAnswerCount = question?.correctWord?.correctAnswerCount!!.plus(1))
-                updatedWord?.let { dictionary[indexWord] = it }
+                    question?.correctWord?.let { word ->
+                        val updatedWord = word.copy(correctAnswerCount = word.correctAnswerCount + 1)
+                        dictionary[dictionary.indexOf(word)] = updatedWord
+                    }
                 saveDictionary(dictionary)
                 FlagAnswer.RIGHT_ANSWER
             }
@@ -106,6 +108,4 @@ class LearnWordsTrainer {
         }
         File("words.txt").writeText(string)
     }
-
-
 }
