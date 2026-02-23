@@ -22,20 +22,20 @@ data class Question(
     val correctAnswer: String,
 )
 
-class LearnWordsTrainer {
+class LearnWordsTrainer(val learnedAnswerCount: Int = 3, val questionOfWords: Int = 4) {
 
     private var question: Question? = null
     val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
-        val learnedCount = dictionary.filter { it.correctAnswerCount >= LEARNED_NUMBER }.size
+        val learnedCount = dictionary.filter { it.correctAnswerCount >= learnedAnswerCount }.size
         val totalCount = dictionary.count()
         val percent = if (totalCount > 0) learnedCount * 100 / totalCount else 0
         return Statistics(learnedCount, totalCount, percent)
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswerCount < LEARNED_NUMBER }
+        val notLearnedList = dictionary.filter { it.correctAnswerCount < learnedAnswerCount }
         if (notLearnedList.isEmpty()) return null
 
         val correctAnswer = notLearnedList.map { it.translate }
@@ -46,7 +46,7 @@ class LearnWordsTrainer {
             .distinct()
             .filter { it != correctAnswer }
             .shuffled()
-            .take(OPTIONS_NUMBER - 1)
+            .take(questionOfWords - 1)
 
         val options = (questionWords + correctAnswer).shuffled()
         question = Question(variants = options, correctWord, correctAnswer)

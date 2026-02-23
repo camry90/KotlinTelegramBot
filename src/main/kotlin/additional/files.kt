@@ -1,8 +1,5 @@
 package additional
 
-const val LEARNED_NUMBER = 3
-const val OPTIONS_NUMBER = 4
-
 data class Word(
     val original: String,
     val translate: String,
@@ -19,7 +16,7 @@ fun Question.asConsoleString(): String {
 
 fun main() {
 
-    val trainer = LearnWordsTrainer()
+    val trainer = LearnWordsTrainer(3, 4)
 
     while (true) {
         println(
