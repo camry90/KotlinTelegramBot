@@ -12,7 +12,10 @@ fun main(args: Array<String>) {
 
     val client: HttpClient = HttpClient.newBuilder().build()
     val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
+    val secondRequest: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetMe)).build()
     val response: HttpResponse<String?>? = client.send(request, HttpResponse.BodyHandlers.ofString())
+    val secondResponse: HttpResponse<String> = client.send(secondRequest, HttpResponse.BodyHandlers.ofString())
 
     println(response?.body())
+    println(secondResponse.body())
 }
