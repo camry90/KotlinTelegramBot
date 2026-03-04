@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
     val botService = TelegramBotService(args[0])
 
     var updateId = 0
-    var chatId = 0
+    var chatId: Long = 0
     val messageUpdateIdRegex: Regex = "\"update_id\":(\\d+)".toRegex()
     val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
     val messageChatIdRegex: Regex = "\"chat\":\\{\"id\":(\\d+)".toRegex()
@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
 
         val matchResultChatId: MatchResult? = messageChatIdRegex.find(updates)
         val groupsChatId = matchResultChatId?.groups
-        groupsChatId?.get(1)?.value?.let { chatId = (it).toInt() }
+        groupsChatId?.get(1)?.value?.let { chatId = (it).toLong() }
 
         if (text.equals("Hello", ignoreCase = true)) {
             botService.sendMessage(chatId, text)
