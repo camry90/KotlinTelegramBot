@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
 
         val matchResultText: MatchResult? = messageTextRegex.find(updates)
         val groupsText = matchResultText?.groups
-        val text = groupsText?.get(1)?.value
+        val text = groupsText?.get(1)?.value.toString()
         println(text)
 
         val matchResultChatId: MatchResult? = messageChatIdRegex.find(updates)
