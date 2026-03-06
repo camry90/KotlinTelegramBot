@@ -4,6 +4,12 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 
+data class Word(
+    val original: String,
+    val translate: String,
+    val correctAnswerCount: Int = 0,
+)
+
 enum class FlagAnswer {
     RIGHT_ANSWER,
     MENU,

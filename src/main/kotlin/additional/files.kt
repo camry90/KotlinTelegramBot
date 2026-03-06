@@ -1,11 +1,5 @@
 package additional
 
-data class Word(
-    val original: String,
-    val translate: String,
-    val correctAnswerCount: Int = 0,
-)
-
 fun Question.asConsoleString(): String {
 
     val variants = this.variants
