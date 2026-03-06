@@ -14,6 +14,9 @@ fun main(args: Array<String>) {
     val messageUpdateIdRegex: Regex = "\"update_id\":(\\d+)".toRegex()
     val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
     val messageChatIdRegex: Regex = "\"chat\":\\{\"id\":(\\d+)".toRegex()
+    val dataRegex: Regex = "\"data\":\"(.+?)\"".toRegex()
+
+    val trainer = LearnWordsTrainer(3, 4)
 
     while (true) {
         Thread.sleep(2000)
@@ -27,15 +30,21 @@ fun main(args: Array<String>) {
 
         val matchResultText: MatchResult? = messageTextRegex.find(updates)
         val groupsText = matchResultText?.groups
-        val text = groupsText?.get(1)?.value.toString()
+        val text = groupsText?.get(1)?.value
         println(text)
 
         val matchResultChatId: MatchResult? = messageChatIdRegex.find(updates)
         val groupsChatId = matchResultChatId?.groups
         groupsChatId?.get(1)?.value?.let { chatId = (it).toLong() }
 
+        val dataMessage = dataRegex.find(updates)
+
         if (text.equals("Hello", ignoreCase = true)) {
             botService.sendMessage(chatId, text)
+        }
+
+        if (text.equals("Menu", ignoreCase = true)) {
+            botService.sendMenu(chatId)
         }
     }
 }
