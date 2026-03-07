@@ -1,10 +1,5 @@
 package additional
 
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-
 fun main(args: Array<String>) {
 
     val botService = TelegramBotService(args[0])
@@ -37,14 +32,28 @@ fun main(args: Array<String>) {
         val groupsChatId = matchResultChatId?.groups
         groupsChatId?.get(1)?.value?.let { chatId = (it).toLong() }
 
-        val dataMessage = dataRegex.find(updates)
+        val matchResultData: MatchResult? = dataRegex.find(updates)
+        val groupsData = matchResultData?.groups
+        val dataMessage = groupsData?.get(1)?.value
+        println(dataMessage)
 
-        if (text.equals("Hello", ignoreCase = true)) {
-            botService.sendMessage(chatId, text)
+        when {
+            text == "Hello" -> {
+                botService.sendMessage(chatId, text)
+            }
+
+            text == "/start" -> {
+                botService.sendMenu(chatId)
+            }
+
+            dataMessage == CALLBACK_DATA_STATISTICS -> {
+                val statistics = trainer.getStatistics()
+                botService.sendMessage(
+                    chatId,
+                    "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
+                )
+            }
         }
 
-        if (text.equals("Menu", ignoreCase = true)) {
-            botService.sendMenu(chatId)
-        }
     }
 }
