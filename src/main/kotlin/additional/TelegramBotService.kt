@@ -6,6 +6,9 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
+const val COMMAND_START = "/start"
+const val GREETING_STRING = "Hello"
+const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val CALLBACK_DATA_LEARN_WORDS = "learn_words_clicked"
 const val CALLBACK_DATA_STATISTICS = "statistics_clicked"
 const val BASIC_URL = "https://api.telegram.org/bot"
@@ -62,4 +65,71 @@ class TelegramBotService(private val botToken: String) {
 
         response.body()
     }
+
+    fun sendQuestion(chatId: Long, trainer: LearnWordsTrainer) {
+
+        val urlSendUpdates = "$BASIC_URL$botToken/sendMessage?"
+        val questions = trainer.getNextQuestion()
+        val variants = questions?.variants
+
+        val sendQuestionBody = """
+           {
+             "chat_id": $chatId,
+             "text": "Переведите ${questions?.correctWord?.original}",
+             "reply_markup": {
+               "inline_keyboard": [
+                 [
+                   {
+                     "text": "${variants?.get(0)}",
+                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}1"
+                   },
+                   {
+                     "text": "${variants?.get(1)}",
+                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}2"
+                   }
+                 ],
+                 [
+                   {
+                     "text": "${variants?.get(2)}",
+                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}3"
+                   },
+                   {
+                     "text": "${variants?.get(3)}",
+                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}4"
+                   }
+                 ],
+                 [
+                   {
+                     "text": "Выход в меню",
+                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}0"
+                   }
+                 ]
+               ]
+             }
+           }
+        """.trimIndent()
+        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendUpdates))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(sendQuestionBody))
+            .build()
+        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+
+        response.body()
+
+    }
+
+    fun checkNextQuestionAndSend(
+        trainer: LearnWordsTrainer,
+        telegramBotService: TelegramBotService,
+        chatId: Long,
+    ) {
+        val question = trainer.getNextQuestion()
+
+        if (question == null) {
+            telegramBotService.sendMessage(chatId, "Все слова выучены")
+        } else {
+            telegramBotService.sendQuestion(chatId, trainer)
+        }
+    }
 }
+
