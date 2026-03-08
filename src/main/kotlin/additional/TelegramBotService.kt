@@ -66,47 +66,30 @@ class TelegramBotService(private val botToken: String) {
         response.body()
     }
 
-    fun sendQuestion(chatId: Long, trainer: LearnWordsTrainer) {
+    fun sendQuestion(chatId: Long, questions: Question?) {
 
         val urlSendUpdates = "$BASIC_URL$botToken/sendMessage?"
-        val questions = trainer.getNextQuestion()
-        val variants = questions?.variants
+        val buttons = questions?.variants
+            ?.mapIndexed { index, variant ->
+                """[{"text": "$variant", "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}$index"}]"""
+            }?.joinToString(",")
 
         val sendQuestionBody = """
-           {
-             "chat_id": $chatId,
-             "text": "Переведите ${questions?.correctWord?.original}",
-             "reply_markup": {
-               "inline_keyboard": [
-                 [
-                   {
-                     "text": "${variants?.get(0)}",
-                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}1"
-                   },
-                   {
-                     "text": "${variants?.get(1)}",
-                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}2"
-                   }
-                 ],
-                 [
-                   {
-                     "text": "${variants?.get(2)}",
-                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}3"
-                   },
-                   {
-                     "text": "${variants?.get(3)}",
-                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}4"
-                   }
-                 ],
-                 [
-                   {
-                     "text": "Выход в меню",
-                     "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}0"
-                   }
-                 ]
-               ]
-             }
-           }
+          {
+            "chat_id": $chatId,
+            "text": "Переведите ${questions?.correctWord?.original}",
+            "reply_markup": {
+              "inline_keyboard": [
+                $buttons,
+                [
+                  {
+                    "text": "Выход в меню",
+                    "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}0"
+                  }
+                ]
+              ]
+            }
+          }
         """.trimIndent()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendUpdates))
             .header("Content-Type", "application/json")
@@ -128,7 +111,7 @@ class TelegramBotService(private val botToken: String) {
         if (question == null) {
             telegramBotService.sendMessage(chatId, "Все слова выучены")
         } else {
-            telegramBotService.sendQuestion(chatId, trainer)
+            telegramBotService.sendQuestion(chatId, question)
         }
     }
 }
