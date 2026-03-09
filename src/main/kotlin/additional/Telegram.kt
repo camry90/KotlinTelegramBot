@@ -21,12 +21,10 @@ fun main(args: Array<String>) {
         val matchResultUpdateId: MatchResult? = messageUpdateIdRegex.find(updates)
         val groupsUpdateId = matchResultUpdateId?.groups
         groupsUpdateId?.get(1)?.value?.let { updateId = (it).toInt() + 1 }
-        println(updateId)
 
         val matchResultText: MatchResult? = messageTextRegex.find(updates)
         val groupsText = matchResultText?.groups
         val text = groupsText?.get(1)?.value
-        println(text)
 
         val matchResultChatId: MatchResult? = messageChatIdRegex.find(updates)
         val groupsChatId = matchResultChatId?.groups
@@ -35,14 +33,13 @@ fun main(args: Array<String>) {
         val matchResultData: MatchResult? = dataRegex.find(updates)
         val groupsData = matchResultData?.groups
         val dataMessage = groupsData?.get(1)?.value
-        println(dataMessage)
 
         when {
-            text == "Hello" -> {
+            text == GREETING_STRING -> {
                 botService.sendMessage(chatId, text)
             }
 
-            text == "/start" -> {
+            text == COMMAND_START -> {
                 botService.sendMenu(chatId)
             }
 
@@ -52,6 +49,10 @@ fun main(args: Array<String>) {
                     chatId,
                     "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
                 )
+            }
+
+            dataMessage == CALLBACK_DATA_LEARN_WORDS -> {
+                botService.checkNextQuestionAndSend(trainer, botService, chatId)
             }
         }
 
