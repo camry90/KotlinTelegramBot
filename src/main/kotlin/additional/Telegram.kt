@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
     val dataRegex: Regex = "\"data\":\"(.+?)\"".toRegex()
 
     val trainer = LearnWordsTrainer(3, 4)
+    var currentQuestion: Question? = null
 
     while (true) {
         Thread.sleep(2000)
@@ -52,7 +53,27 @@ fun main(args: Array<String>) {
             }
 
             dataMessage == CALLBACK_DATA_LEARN_WORDS -> {
-                botService.checkNextQuestionAndSend(trainer, botService, chatId)
+                currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+            }
+
+            dataMessage?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
+                val index = dataMessage.substringAfterLast(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
+                when (trainer.checkAnswer(index)) {
+                    FlagAnswer.RIGHT_ANSWER -> {
+                        botService.sendMessage(chatId, "Правильно!")
+                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+                    }
+
+                    FlagAnswer.WRONG_ANSWER -> {
+                        botService.sendMessage(
+                            chatId,
+                            "Неправильно! ${currentQuestion?.correctWord?.original} - это ${currentQuestion?.correctAnswer}"
+                        )
+                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+                    }
+
+                    FlagAnswer.MENU -> botService.sendMenu(chatId)
+                }
             }
         }
 

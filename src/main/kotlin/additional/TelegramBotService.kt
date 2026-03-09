@@ -8,6 +8,7 @@ import java.net.http.HttpResponse
 
 const val COMMAND_START = "/start"
 const val GREETING_STRING = "Hello"
+const val ANSWER_MENU = "0"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val CALLBACK_DATA_LEARN_WORDS = "learn_words_clicked"
 const val CALLBACK_DATA_STATISTICS = "statistics_clicked"
@@ -71,7 +72,7 @@ class TelegramBotService(private val botToken: String) {
         val urlSendUpdates = "$BASIC_URL$botToken/sendMessage?"
         val buttons = questions?.variants
             ?.mapIndexed { index, variant ->
-                """[{"text": "$variant", "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}$index"}]"""
+                """[{"text": "$variant", "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}${index + 1}"}]"""
             }?.joinToString(",")
 
         val sendQuestionBody = """
@@ -84,7 +85,7 @@ class TelegramBotService(private val botToken: String) {
                 [
                   {
                     "text": "Выход в меню",
-                    "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX}0"
+                    "callback_data": "${CALLBACK_DATA_ANSWER_PREFIX + ANSWER_MENU}"
                   }
                 ]
               ]
@@ -105,7 +106,7 @@ class TelegramBotService(private val botToken: String) {
         trainer: LearnWordsTrainer,
         telegramBotService: TelegramBotService,
         chatId: Long,
-    ) {
+    ): Question? {
         val question = trainer.getNextQuestion()
 
         if (question == null) {
@@ -113,6 +114,7 @@ class TelegramBotService(private val botToken: String) {
         } else {
             telegramBotService.sendQuestion(chatId, question)
         }
+        return question
     }
 }
 
