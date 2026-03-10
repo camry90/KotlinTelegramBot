@@ -1,81 +1,138 @@
 package additional
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class Update(
+    @SerialName("update_id")
+    val updateId: Long,
+    @SerialName("message")
+    val message: Message? = null,
+    @SerialName("callback_query")
+    val callbackQuery: CallbackQuery? = null,
+)
+
+@Serializable
+data class Message(
+    @SerialName("text")
+    val text: String,
+    @SerialName("chat")
+    val chat: Chat? = null,
+)
+
+@Serializable
+data class Response(
+    val result: List<Update>
+)
+
+@Serializable
+data class CallbackQuery(
+    @SerialName("data")
+    val data: String? = null,
+    @SerialName("message")
+    val message: Message? = null,
+)
+
+@Serializable
+data class Chat(
+    @SerialName("id")
+    val id: Long,
+)
+
+@Serializable
+data class SendMessageRequest(
+    @SerialName("chat_id")
+    val chatId: Long?,
+    @SerialName("text")
+    val text: String?,
+    @SerialName("reply_markup")
+    val replyMarkup: ReplyMarkup? = null,
+)
+
+@Serializable
+data class ReplyMarkup(
+    @SerialName("inline_keyboard")
+    val inlineKeyboard: List<List<InlineKeyboard>>,
+)
+
+@Serializable
+data class InlineKeyboard(
+    @SerialName("callback_data")
+    val callbackData: String,
+    @SerialName("text")
+    val text: String,
+)
+
 fun main(args: Array<String>) {
 
+    val json = Json {
+        ignoreUnknownKeys = true
+    }
     val botService = TelegramBotService(args[0])
-
-    var updateId = 0
-    var chatId: Long = 0
-    val messageUpdateIdRegex: Regex = "\"update_id\":(\\d+)".toRegex()
-    val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
-    val messageChatIdRegex: Regex = "\"chat\":\\{\"id\":(\\d+)".toRegex()
-    val dataRegex: Regex = "\"data\":\"(.+?)\"".toRegex()
-
+    var lastUpdateId = 0L
     val trainer = LearnWordsTrainer(3, 4)
     var currentQuestion: Question? = null
 
     while (true) {
-        Thread.sleep(2000)
-        val updates: String = botService.getUpdates(updateId)
-        println(updates)
+        Thread.sleep(1000)
+        val responseString: String = botService.getUpdates(lastUpdateId)
+        println(responseString)
 
-        val matchResultUpdateId: MatchResult? = messageUpdateIdRegex.find(updates)
-        val groupsUpdateId = matchResultUpdateId?.groups
-        groupsUpdateId?.get(1)?.value?.let { updateId = (it).toInt() + 1 }
+        val response: Response = json.decodeFromString<Response>(responseString)
+        val updates = response.result
+        val firstUpdate = updates.firstOrNull() ?: continue
+        val updateId = firstUpdate.updateId
+        lastUpdateId = updateId + 1
 
-        val matchResultText: MatchResult? = messageTextRegex.find(updates)
-        val groupsText = matchResultText?.groups
-        val text = groupsText?.get(1)?.value
+        val message = firstUpdate.message?.text
+        val chatId = firstUpdate.message?.chat?.id ?: firstUpdate.callbackQuery?.message?.chat?.id
+        val data = firstUpdate.callbackQuery?.data
 
-        val matchResultChatId: MatchResult? = messageChatIdRegex.find(updates)
-        val groupsChatId = matchResultChatId?.groups
-        groupsChatId?.get(1)?.value?.let { chatId = (it).toLong() }
-
-        val matchResultData: MatchResult? = dataRegex.find(updates)
-        val groupsData = matchResultData?.groups
-        val dataMessage = groupsData?.get(1)?.value
 
         when {
-            text == GREETING_STRING -> {
-                botService.sendMessage(chatId, text)
+            message == GREETING_STRING -> {
+                botService.sendMessage(json, chatId, message)
             }
 
-            text == COMMAND_START -> {
-                botService.sendMenu(chatId)
+            message == COMMAND_START -> {
+                botService.sendMenu(json, chatId)
             }
 
-            dataMessage == CALLBACK_DATA_STATISTICS -> {
+            data == CALLBACK_DATA_STATISTICS -> {
                 val statistics = trainer.getStatistics()
                 botService.sendMessage(
+                    json,
                     chatId,
                     "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
                 )
             }
 
-            dataMessage == CALLBACK_DATA_LEARN_WORDS -> {
-                currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+            data == CALLBACK_DATA_LEARN_WORDS -> {
+                currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
             }
 
-            dataMessage?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
-                val index = dataMessage.substringAfterLast(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
+            data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
+                val index = data.substringAfterLast(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
                 when (trainer.checkAnswer(index)) {
                     FlagAnswer.RIGHT_ANSWER -> {
-                        botService.sendMessage(chatId, "Правильно!")
-                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+                        botService.sendMessage(json, chatId, "Правильно!")
+                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
                     }
 
                     FlagAnswer.WRONG_ANSWER -> {
                         botService.sendMessage(
+                            json,
                             chatId,
                             "Неправильно! ${currentQuestion?.correctWord?.original} - это ${currentQuestion?.correctAnswer}"
                         )
-                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId)
+                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
                     }
 
-                    FlagAnswer.MENU -> botService.sendMenu(chatId)
+                    FlagAnswer.MENU -> botService.sendMenu(json, chatId)
                 }
             }
         }
-
     }
 }
