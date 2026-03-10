@@ -9,7 +9,6 @@ fun Question.asConsoleString(): String {
 }
 
 fun main() {
-
     val trainer = LearnWordsTrainer(3, 4)
 
     while (true) {
