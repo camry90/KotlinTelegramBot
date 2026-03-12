@@ -9,6 +9,7 @@ import java.net.http.HttpResponse
 const val COMMAND_START = "/start"
 const val GREETING_STRING = "Hello"
 const val CALLBACK_DATA_MENU = "0"
+const val CALLBACK_DATA_RESET = "reset_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val CALLBACK_DATA_LEARN_WORDS = "learn_words_clicked"
 const val CALLBACK_DATA_STATISTICS = "statistics_clicked"
@@ -56,6 +57,9 @@ class TelegramBotService(private val botToken: String) {
                             callbackData = CALLBACK_DATA_LEARN_WORDS, text = "Изучить слова"
                         ),
                         InlineKeyboard(callbackData = CALLBACK_DATA_STATISTICS, text = "Статистика")
+                    ),
+                    listOf(
+                        InlineKeyboard(callbackData = CALLBACK_DATA_RESET, text = "Сбросить прогресс"),
                     )
                 )
             )
@@ -117,4 +121,3 @@ class TelegramBotService(private val botToken: String) {
         return question
     }
 }
-

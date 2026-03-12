@@ -7,7 +7,7 @@ import java.io.IOException
 data class Word(
     val original: String,
     val translate: String,
-    val correctAnswerCount: Int = 0,
+    var correctAnswerCount: Int = 0,
 )
 
 enum class FlagAnswer {
@@ -28,10 +28,14 @@ data class Question(
     val correctAnswer: String,
 )
 
-class LearnWordsTrainer(val learnedAnswerCount: Int = 3, val questionOfWords: Int = 4) {
+class LearnWordsTrainer(
+    private val fileName: String = "word.txt",
+    val learnedAnswerCount: Int = 3,
+    val questionOfWords: Int = 4
+) {
 
     private var question: Question? = null
-    val dictionary = loadDictionary()
+    private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
         val learnedCount = dictionary.filter { it.correctAnswerCount >= learnedAnswerCount }.size
@@ -68,7 +72,7 @@ class LearnWordsTrainer(val learnedAnswerCount: Int = 3, val questionOfWords: In
                     val updatedWord = word.copy(correctAnswerCount = word.correctAnswerCount + 1)
                     dictionary[dictionary.indexOf(word)] = updatedWord
                 }
-                saveDictionary(dictionary)
+                saveDictionary()
                 FlagAnswer.RIGHT_ANSWER
             }
 
@@ -79,15 +83,9 @@ class LearnWordsTrainer(val learnedAnswerCount: Int = 3, val questionOfWords: In
     }
 
     private fun loadDictionary(): MutableList<Word> {
-
-        val wordsFile = File("words.txt")
-
-        try {
-            if (!wordsFile.exists()) {
-                wordsFile.createNewFile()
-            }
-        } catch (e: IOException) {
-            println("Ошибка при создании файла: ${e.message}")
+        val wordsFile = File(fileName)
+        if (!wordsFile.exists()) {
+            File("words.txt").copyTo(wordsFile)
         }
 
         val dictionary: MutableList<Word> = mutableListOf()
@@ -106,10 +104,15 @@ class LearnWordsTrainer(val learnedAnswerCount: Int = 3, val questionOfWords: In
         return dictionary
     }
 
-    private fun saveDictionary(dictionary: MutableList<Word>) {
+    private fun saveDictionary() {
         val string = dictionary.joinToString(separator = "\n") { it ->
             "${it.original}|${it.translate}|${it.correctAnswerCount}"
         }
-        File("words.txt").writeText(string)
+        File(fileName).writeText(string)
+    }
+
+    fun resetProgress() {
+        dictionary.forEach { it.correctAnswerCount = 0 }
+        saveDictionary()
     }
 }

@@ -72,8 +72,8 @@ fun main(args: Array<String>) {
     }
     val botService = TelegramBotService(args[0])
     var lastUpdateId = 0L
-    val trainer = LearnWordsTrainer(3, 4)
-    var currentQuestion: Question? = null
+    val trainers = HashMap<Long, LearnWordsTrainer>()
+    val questions = HashMap<Long, Question?>()
 
     while (true) {
         Thread.sleep(1000)
@@ -81,57 +81,75 @@ fun main(args: Array<String>) {
         println(responseString)
 
         val response: Response = json.decodeFromString<Response>(responseString)
-        val updates = response.result
-        val firstUpdate = updates.firstOrNull() ?: continue
-        val updateId = firstUpdate.updateId
-        lastUpdateId = updateId + 1
+        if (response.result.isEmpty()) continue
+        val sortedUpdates = response.result.sortedBy { it.updateId }
+        sortedUpdates.forEach { handleUpdate(it, json, botService, trainers, questions) }
+        lastUpdateId = sortedUpdates.last().updateId + 1
 
-        val message = firstUpdate.message?.text
-        val chatId = firstUpdate.message?.chat?.id ?: firstUpdate.callbackQuery?.message?.chat?.id
-        val data = firstUpdate.callbackQuery?.data
+    }
+}
+
+fun handleUpdate(
+    update: Update,
+    json: Json,
+    botService: TelegramBotService,
+    trainers: HashMap<Long, LearnWordsTrainer>,
+    questions: HashMap<Long, Question?>,
+) {
+
+    val message = update.message?.text
+    val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
+    val data = update.callbackQuery?.data
+    val currentQuestion: Question? = questions[chatId]
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
 
 
-        when {
-            message == GREETING_STRING -> {
-                botService.sendMessage(json, chatId, message)
-            }
+    when {
+        message == GREETING_STRING -> {
+            botService.sendMessage(json, chatId, message)
+        }
 
-            message == COMMAND_START -> {
-                botService.sendMenu(json, chatId)
-            }
+        message == COMMAND_START -> {
+            botService.sendMenu(json, chatId)
+        }
 
-            data == CALLBACK_DATA_STATISTICS -> {
-                val statistics = trainer.getStatistics()
-                botService.sendMessage(
-                    json,
-                    chatId,
-                    "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
-                )
-            }
+        data == CALLBACK_DATA_STATISTICS -> {
+            val statistics = trainer.getStatistics()
+            botService.sendMessage(
+                json,
+                chatId,
+                "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
+            )
+        }
 
-            data == CALLBACK_DATA_LEARN_WORDS -> {
-                currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
-            }
+        data == CALLBACK_DATA_LEARN_WORDS -> {
+            questions[chatId] = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
+        }
 
-            data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
-                val index = data.substringAfterLast(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
-                when (trainer.checkAnswer(index)) {
-                    FlagAnswer.RIGHT_ANSWER -> {
-                        botService.sendMessage(json, chatId, "Правильно!")
-                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
-                    }
+        data == CALLBACK_DATA_RESET -> {
+            trainer.resetProgress()
+            botService.sendMessage(json, chatId, "Прогресс сброшен")
+            botService.sendMenu(json, chatId)
+        }
 
-                    FlagAnswer.WRONG_ANSWER -> {
-                        botService.sendMessage(
-                            json,
-                            chatId,
-                            "Неправильно! ${currentQuestion?.correctWord?.original} - это ${currentQuestion?.correctAnswer}"
-                        )
-                        currentQuestion = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
-                    }
-
-                    FlagAnswer.MENU -> botService.sendMenu(json, chatId)
+        data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
+            val index = data.substringAfterLast(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
+            when (trainer.checkAnswer(index)) {
+                FlagAnswer.RIGHT_ANSWER -> {
+                    botService.sendMessage(json, chatId, "Правильно!")
+                    questions[chatId] = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
                 }
+
+                FlagAnswer.WRONG_ANSWER -> {
+                    botService.sendMessage(
+                        json,
+                        chatId,
+                        "Неправильно! ${currentQuestion?.correctWord?.original} - это ${currentQuestion?.correctAnswer}"
+                    )
+                    questions[chatId] = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
+                }
+
+                FlagAnswer.MENU -> botService.sendMenu(json, chatId)
             }
         }
     }
