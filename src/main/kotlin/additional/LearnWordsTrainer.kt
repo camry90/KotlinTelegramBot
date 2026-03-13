@@ -2,7 +2,8 @@ package additional
 
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.IOException
+
+const val FILE_NAME = "words.txt"
 
 data class Word(
     val original: String,
@@ -29,7 +30,7 @@ data class Question(
 )
 
 class LearnWordsTrainer(
-    private val fileName: String = "word.txt",
+    private val fileName: String = FILE_NAME,
     val learnedAnswerCount: Int = 3,
     val questionOfWords: Int = 4
 ) {
@@ -85,7 +86,7 @@ class LearnWordsTrainer(
     private fun loadDictionary(): MutableList<Word> {
         val wordsFile = File(fileName)
         if (!wordsFile.exists()) {
-            File("words.txt").copyTo(wordsFile)
+            File(FILE_NAME).copyTo(wordsFile)
         }
 
         val dictionary: MutableList<Word> = mutableListOf()
