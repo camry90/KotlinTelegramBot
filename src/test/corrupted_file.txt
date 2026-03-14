@@ -1,0 +1,3 @@
+forest|лес|0
+tree|дерево|0
+asdaasd|00|1
