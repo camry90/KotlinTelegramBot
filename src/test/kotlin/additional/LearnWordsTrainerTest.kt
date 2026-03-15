@@ -61,7 +61,8 @@ class LearnWordsTrainerTest {
         val trainer = LearnWordsTrainer("src/test/check_answer.txt")
         val nextQuestions = trainer.getNextQuestion()
         val flagFalse = FlagAnswer.WRONG_ANSWER
-        val wrongAnswerId = nextQuestions?.variants?.indexOf(nextQuestions.correctAnswer)
+        val wrongAnswer = nextQuestions?.variants?.find { it != nextQuestions.correctAnswer}
+        val wrongAnswerId = nextQuestions?.variants?.indexOf(wrongAnswer)?.plus(1)
         val question = trainer.checkAnswer(userAnswerInput = wrongAnswerId)
         assertTrue(question == flagFalse)
     }
