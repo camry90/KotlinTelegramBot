@@ -126,10 +126,11 @@ class LearnWordsTrainer(
                 if (parts.size < 2) continue
                 val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
                 val word = Word(parts[0], parts[1], correct)
-                if (dictionary.none { it.original == word.original })
-                dictionary.add(word)
-                saveDictionary()
+                if (dictionary.none { it.original == word.original }) {
+                    dictionary.add(word)
+                }
             }
+            saveDictionary()
         } catch (e: FileNotFoundException) {
             println("Ошибка вывода строки: ${e.message}")
         }

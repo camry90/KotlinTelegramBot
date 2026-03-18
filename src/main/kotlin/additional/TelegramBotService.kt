@@ -31,7 +31,7 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendMessage(json: Json, chatId: Long?, text: String?) {
-        val urlSendUpdates = "$BOT_FILE_URL$botToken/sendMessage?"
+        val urlSendUpdates = "$BASIC_URL$botToken/sendMessage?"
 
         val requestBody = SendMessageRequest(
             chatId = chatId,
@@ -155,7 +155,10 @@ class TelegramBotService(private val botToken: String) {
             .send(request, HttpResponse.BodyHandlers.ofInputStream());
 
         println("status code: " + response.statusCode());
-        val body: InputStream = response.body()
-        body.copyTo(File(fileName).outputStream(), 16 * 1024)
+        response.body().use { body ->
+            File(fileName).outputStream().use { output ->
+                body.copyTo(output, 16 * 1024)
+            }
+        }
     }
 }
