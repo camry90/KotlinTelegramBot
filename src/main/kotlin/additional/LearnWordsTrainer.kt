@@ -116,4 +116,23 @@ class LearnWordsTrainer(
         dictionary.forEach { it.correctAnswerCount = 0 }
         saveDictionary()
     }
+
+    fun readFile(fileUniqueId: String) {
+        val wordsFile = File(fileUniqueId)
+
+        try {
+            for (line in wordsFile.readLines()) {
+                val parts = line.split("|")
+                if (parts.size < 2) continue
+                val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                val word = Word(parts[0], parts[1], correct)
+                if (dictionary.none { it.original == word.original }) {
+                    dictionary.add(word)
+                }
+            }
+            saveDictionary()
+        } catch (e: FileNotFoundException) {
+            println("Ошибка вывода строки: ${e.message}")
+        }
+    }
 }

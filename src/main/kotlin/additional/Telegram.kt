@@ -17,14 +17,16 @@ data class Update(
 @Serializable
 data class Message(
     @SerialName("text")
-    val text: String,
+    val text: String? = null,
     @SerialName("chat")
     val chat: Chat? = null,
+    @SerialName("document")
+    val document: Document? = null,
 )
 
 @Serializable
 data class Response(
-    val result: List<Update>
+    val result: List<Update> = emptyList(),
 )
 
 @Serializable
@@ -65,6 +67,46 @@ data class InlineKeyboard(
     val text: String,
 )
 
+@Serializable
+data class Document(
+    @SerialName("file_name")
+    val fileName: String,
+    @SerialName("mime_type")
+    val mimeType: String,
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_unique_id")
+    val fileUniqueId: String,
+    @SerialName("file_size")
+    val fileSize: Long,
+)
+
+@Serializable
+data class GetFileRequest(
+    @SerialName("file_id")
+    val fileId: String,
+)
+
+@Serializable
+data class GetFileResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: TelegramFile? = null,
+)
+
+@Serializable
+data class TelegramFile(
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_unique_id")
+    val fileUniqueId: String,
+    @SerialName("file_size")
+    val fileSize: Long,
+    @SerialName("file_path")
+    val filePath: String,
+)
+
 fun main(args: Array<String>) {
 
     val json = Json {
@@ -102,9 +144,20 @@ fun handleUpdate(
     val data = update.callbackQuery?.data
     val currentQuestion: Question? = questions[chatId]
     val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
+    val messageDocument = update.message?.document
 
+    if( messageDocument != null ) {
+        val jsonResponse = botService.getFile( messageDocument.fileId, json )
+        println(jsonResponse)
+        val response: GetFileResponse = json.decodeFromString(jsonResponse)
+        response.result?.let {
+            botService.downloadFile(it.filePath, it.fileUniqueId)
+            trainer.readFile(it.fileUniqueId)
+        }
+    }
 
     when {
+
         message == GREETING_STRING -> {
             botService.sendMessage(json, chatId, message)
         }
