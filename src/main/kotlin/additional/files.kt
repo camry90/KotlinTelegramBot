@@ -41,6 +41,7 @@ fun main() {
                         FlagAnswer.RIGHT_ANSWER -> println("Правильно!")
                         FlagAnswer.MENU -> break
                         FlagAnswer.WRONG_ANSWER -> println("Неправильно! ${question.correctWord?.original} - это ${question.correctAnswer}")
+                        FlagAnswer.IMAGE_HINT -> break
                     }
                 }
             }

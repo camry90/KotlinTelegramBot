@@ -3,6 +3,7 @@ package additional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
 
 @Serializable
 data class Update(
@@ -96,6 +97,26 @@ data class GetFileResponse(
 )
 
 @Serializable
+data class SendPhotoResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: SendPhotoResult? = null,
+)
+
+@Serializable
+data class SendPhotoResult(
+    @SerialName("photo")
+    val photo: List<PhotoSize>
+)
+
+@Serializable
+data class PhotoSize(
+    @SerialName("file_id")
+    val fileId: String,
+)
+
+@Serializable
 data class TelegramFile(
     @SerialName("file_id")
     val fileId: String,
@@ -105,6 +126,16 @@ data class TelegramFile(
     val fileSize: Long,
     @SerialName("file_path")
     val filePath: String,
+)
+
+@Serializable
+data class SendPhotoRequest(
+    @SerialName("chat_id")
+    val chatId: Long?,
+    @SerialName("photo")
+    val photo: String?,
+    @SerialName("has_spoiler")
+    val hasSpoiler: Boolean = false,
 )
 
 fun main(args: Array<String>) {
@@ -203,6 +234,22 @@ fun handleUpdate(
                 }
 
                 FlagAnswer.MENU -> botService.sendMenu(json, chatId)
+
+                FlagAnswer.IMAGE_HINT -> {
+                    val correctWord = currentQuestion?.correctWord
+                    if (correctWord?.imageHint != null ) {
+                        if (correctWord.fileId != null) {
+                            botService.sendPhotoById((correctWord.fileId).toString(), chatId, json = json)
+                        } else {
+                            val file = File("build/libs/${correctWord.imageHint}")
+                            val response = botService.sendPhoto(file, chatId)
+                            val sendPhotoResponse: SendPhotoResponse = json.decodeFromString(response)
+                            val fileId = sendPhotoResponse.result?.photo?.last()?.fileId
+                            correctWord.fileId = fileId
+                            trainer.saveDictionary()
+                        }
+                    }
+                }
             }
         }
     }
