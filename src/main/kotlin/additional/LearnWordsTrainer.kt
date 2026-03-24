@@ -17,7 +17,6 @@ enum class FlagAnswer {
     RIGHT_ANSWER,
     MENU,
     WRONG_ANSWER,
-    IMAGE_HINT
 }
 
 data class Statistics(
@@ -81,7 +80,6 @@ class LearnWordsTrainer(
             }
 
             0 -> FlagAnswer.MENU
-            -1 -> FlagAnswer.IMAGE_HINT
             else -> FlagAnswer.WRONG_ANSWER
 
         }

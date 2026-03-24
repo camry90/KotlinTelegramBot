@@ -20,7 +20,6 @@ const val CALLBACK_DATA_RESET = "reset_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val CALLBACK_DATA_LEARN_WORDS = "learn_words_clicked"
 const val CALLBACK_DATA_STATISTICS = "statistics_clicked"
-const val CALLBACK_DATA_IMAGE_HINT = "-1"
 const val BASIC_URL = "https://api.telegram.org/bot"
 const val BOT_FILE_URL = "https://api.telegram.org/file/bot"
 
@@ -98,7 +97,6 @@ class TelegramBotService(private val botToken: String) {
                     } ?: listOf(), listOf(
                         InlineKeyboard(callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$CALLBACK_DATA_MENU", text = "Меню"),
                     ),
-                    listOf(InlineKeyboard(callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$CALLBACK_DATA_IMAGE_HINT", text = "Подсказка"))
                 )
 
             )
@@ -117,7 +115,7 @@ class TelegramBotService(private val botToken: String) {
     fun checkNextQuestionAndSend(
         trainer: LearnWordsTrainer,
         telegramBotService: TelegramBotService,
-        chatId: Long?,
+        chatId: Long,
         json: Json,
     ): Question? {
         val question = trainer.getNextQuestion()
@@ -125,6 +123,19 @@ class TelegramBotService(private val botToken: String) {
         if (question == null) {
             telegramBotService.sendMessage(json, chatId, "Все слова выучены")
         } else {
+            val correctWord = question.correctWord
+            if (correctWord?.imageHint != null) {
+                if (correctWord.fileId != null) {
+                    sendPhotoById(correctWord.fileId.toString(), chatId, hasSpoiler = true, json)
+                } else {
+                    val file = File("build/libs/${correctWord.imageHint}")
+                    val response = sendPhoto(file, chatId, hasSpoiler = true)
+                    val sendPhotoResponse: SendPhotoResponse = json.decodeFromString(response)
+                    val fileId = sendPhotoResponse.result?.photo?.last()?.fileId
+                    correctWord.fileId = fileId
+                    trainer.saveDictionary()
+                }
+            }
             telegramBotService.sendQuestion(json, chatId, question)
         }
         return question
@@ -172,6 +183,7 @@ class TelegramBotService(private val botToken: String) {
         val data: MutableMap<String, Any> = LinkedHashMap()
         data["chat_id"] = chatId.toString()
         data["photo"] = file
+        data["has_spoiler"] = hasSpoiler
         val boundary: String = BigInteger(35, Random()).toString()
 
         val request = HttpRequest.newBuilder()

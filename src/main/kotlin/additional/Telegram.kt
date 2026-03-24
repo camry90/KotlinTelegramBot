@@ -235,21 +235,6 @@ fun handleUpdate(
 
                 FlagAnswer.MENU -> botService.sendMenu(json, chatId)
 
-                FlagAnswer.IMAGE_HINT -> {
-                    val correctWord = currentQuestion?.correctWord
-                    if (correctWord?.imageHint != null ) {
-                        if (correctWord.fileId != null) {
-                            botService.sendPhotoById((correctWord.fileId).toString(), chatId, json = json)
-                        } else {
-                            val file = File("build/libs/${correctWord.imageHint}")
-                            val response = botService.sendPhoto(file, chatId)
-                            val sendPhotoResponse: SendPhotoResponse = json.decodeFromString(response)
-                            val fileId = sendPhotoResponse.result?.photo?.last()?.fileId
-                            correctWord.fileId = fileId
-                            trainer.saveDictionary()
-                        }
-                    }
-                }
             }
         }
     }
