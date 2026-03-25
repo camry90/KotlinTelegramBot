@@ -128,7 +128,7 @@ class TelegramBotService(private val botToken: String) {
                 if (correctWord.fileId != null) {
                     sendPhotoById(correctWord.fileId.toString(), chatId, hasSpoiler = true, json)
                 } else {
-                    val file = File("build/libs/${correctWord.imageHint}")
+                    val file = File("images/${correctWord.imageHint}")
                     val response = sendPhoto(file, chatId, hasSpoiler = true)
                     val sendPhotoResponse: SendPhotoResponse = json.decodeFromString(response)
                     val fileId = sendPhotoResponse.result?.photo?.last()?.fileId

@@ -111,7 +111,7 @@ class LearnWordsTrainer(
 
     fun saveDictionary() {
         val string = dictionary.joinToString(separator = "\n") { it ->
-            "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint}|${it.fileId}"
+            "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint ?: ""}|${it.fileId ?: ""}"
         }
         File(fileName).writeText(string)
     }
