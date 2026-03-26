@@ -9,6 +9,8 @@ data class Word(
     val original: String,
     val translate: String,
     var correctAnswerCount: Int = 0,
+    val imageHint: String? = null,
+    var fileId: String? = null,
 )
 
 enum class FlagAnswer {
@@ -96,7 +98,9 @@ class LearnWordsTrainer(
                 val parts = line.split("|")
                 if (parts.size < 2) continue
                 val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                val word = Word(parts[0], parts[1], correct)
+                val image = parts.getOrNull(3)?.ifEmpty { null }
+                val fileIdCheck = parts.getOrNull(4)?.ifEmpty { null }
+                val word = Word(parts[0], parts[1], correct, imageHint = image, fileId = fileIdCheck)
                 dictionary.add(word)
             }
         } catch (e: FileNotFoundException) {
@@ -105,9 +109,9 @@ class LearnWordsTrainer(
         return dictionary
     }
 
-    private fun saveDictionary() {
+    fun saveDictionary() {
         val string = dictionary.joinToString(separator = "\n") { it ->
-            "${it.original}|${it.translate}|${it.correctAnswerCount}"
+            "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint ?: ""}|${it.fileId ?: ""}"
         }
         File(fileName).writeText(string)
     }
@@ -125,7 +129,9 @@ class LearnWordsTrainer(
                 val parts = line.split("|")
                 if (parts.size < 2) continue
                 val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                val word = Word(parts[0], parts[1], correct)
+                val image = parts.getOrNull(3)?.ifEmpty { null }
+                val fileIdCheck = parts.getOrNull(4)?.ifEmpty { null }
+                val word = Word(parts[0], parts[1], correct, imageHint = image, fileId = fileIdCheck)
                 if (dictionary.none { it.original == word.original }) {
                     dictionary.add(word)
                 }
