@@ -24,7 +24,7 @@ const val BASIC_URL = "https://api.telegram.org/bot"
 const val BOT_FILE_URL = "https://api.telegram.org/file/bot"
 
 class TelegramBotService(private val botToken: String) {
-    
+
     private val client: HttpClient = HttpClient.newBuilder().build()
 
     fun getUpdates(updateId: Long): String {
@@ -48,7 +48,7 @@ class TelegramBotService(private val botToken: String) {
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> = this.client.send(request, HttpResponse.BodyHandlers.ofString())
 
         response.body()
     }
@@ -78,7 +78,7 @@ class TelegramBotService(private val botToken: String) {
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> = this.client.send(request, HttpResponse.BodyHandlers.ofString())
 
         response.body()
     }
@@ -94,7 +94,8 @@ class TelegramBotService(private val botToken: String) {
                 listOf(
                     questions?.variants?.mapIndexed { index, word ->
                         InlineKeyboard(callbackData = "$CALLBACK_DATA_ANSWER_PREFIX${index + 1}", text = word)
-                    } ?: listOf(), listOf(
+                    } ?: listOf(),
+                    listOf(
                         InlineKeyboard(callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$CALLBACK_DATA_MENU", text = "Меню"),
                     ),
                 )
@@ -107,7 +108,7 @@ class TelegramBotService(private val botToken: String) {
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> = this.client.send(request, HttpResponse.BodyHandlers.ofString())
 
         response.body()
     }
@@ -145,13 +146,12 @@ class TelegramBotService(private val botToken: String) {
         val urlGetFile = "$BASIC_URL$botToken/getFile"
         val requestBody = GetFileRequest(fileId = fileId)
         val requestBodyString = json.encodeToString(requestBody)
-        val client: HttpClient = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
             .uri(URI.create(urlGetFile))
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val response: HttpResponse<String> = client.send(
+        val response: HttpResponse<String> = this.client.send(
             request,
             HttpResponse.BodyHandlers.ofString()
         )
@@ -190,8 +190,7 @@ class TelegramBotService(private val botToken: String) {
             .uri(URI.create("$BASIC_URL$botToken/sendPhoto"))
             .postMultipartFormData(boundary, data)
             .build()
-        val client: HttpClient = HttpClient.newBuilder().build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
     }
 
@@ -209,8 +208,7 @@ class TelegramBotService(private val botToken: String) {
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val client: HttpClient = HttpClient.newBuilder().build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
     }
 }
