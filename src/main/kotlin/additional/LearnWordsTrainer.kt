@@ -103,10 +103,40 @@ class LearnWordsTrainer(
                 val word = Word(parts[0], parts[1], correct, imageHint = image, fileId = fileIdCheck)
                 dictionary.add(word)
             }
+
+            if (fileName != FILE_NAME) {
+                val masterWords = loadMasterDictionary()
+                var updated = false
+                dictionary.replaceAll { word ->
+                    if (word.imageHint == null) {
+                        val master = masterWords.find { it.original == word.original }
+                        if (master?.imageHint != null) {
+                            updated = true
+                            word.copy(imageHint = master.imageHint)
+                        } else word
+                    } else word
+                }
+                if (updated) saveDictionary()
+            }
         } catch (e: FileNotFoundException) {
             println("Ошибка вывода строки: ${e.message}")
         }
         return dictionary
+    }
+
+    private fun loadMasterDictionary(): List<Word> {
+        val result = mutableListOf<Word>()
+        try {
+            for (line in File(FILE_NAME).readLines()) {
+                val parts = line.split("|")
+                if (parts.size < 2) continue
+                val image = parts.getOrNull(3)?.ifEmpty { null }
+                result.add(Word(parts[0], parts[1], imageHint = image))
+            }
+        } catch (e: FileNotFoundException) {
+            println("Мастер-словарь не найден: ${e.message}")
+        }
+        return result
     }
 
     fun saveDictionary() {
