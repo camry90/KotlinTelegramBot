@@ -116,7 +116,12 @@ class LearnWordsTrainer(
                         } else word
                     } else word
                 }
-                if (updated) saveDictionary()
+                if (updated) {
+                    val string = dictionary.joinToString(separator = "\n") {
+                        "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint ?: ""}|${it.fileId ?: ""}"
+                    }
+                    File(fileName).writeText(string)
+                }
             }
         } catch (e: FileNotFoundException) {
             println("Ошибка вывода строки: ${e.message}")
