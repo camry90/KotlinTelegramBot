@@ -26,6 +26,7 @@ const val BOT_FILE_URL = "https://api.telegram.org/file/bot"
 class TelegramBotService(private val botToken: String) {
 
     private val client: HttpClient = HttpClient.newBuilder().build()
+    val dynamicMessage = DynamicMessage()
 
     fun getUpdates(updateId: Long): String {
         val urlGetUpdates = "$BASIC_URL$botToken/getUpdates?offset=$updateId"
@@ -35,7 +36,7 @@ class TelegramBotService(private val botToken: String) {
         return response.body()
     }
 
-    fun sendMessage(json: Json, chatId: Long?, text: String?) {
+    fun sendMessage(json: Json, chatId: Long?, text: String?): Long? {
         val urlSendUpdates = "$BASIC_URL$botToken/sendMessage?"
 
         val requestBody = SendMessageRequest(
@@ -50,7 +51,8 @@ class TelegramBotService(private val botToken: String) {
             .build()
         val response: HttpResponse<String> = this.client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        response.body()
+        val sendMessageResponse = json.decodeFromString<SendMessageResponse>(response.body())
+        return sendMessageResponse.result?.messageId
     }
 
     fun sendMenu(json: Json, chatId: Long?) {
@@ -211,34 +213,55 @@ class TelegramBotService(private val botToken: String) {
         val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
     }
-}
 
-private fun HttpRequest.Builder.postMultipartFormData(boundary: String, data: Map<String, Any>): HttpRequest.Builder {
-    val byteArrays = ArrayList<ByteArray>()
-    val separator = "--$boundary\r\nContent-Disposition: form-data; name=".toByteArray(StandardCharsets.UTF_8)
+    fun editMessage(chatId: Long, messageId: Long, message: String, json: Json) {
+        val sendUpdates = "$BASIC_URL$botToken/editMessageText"
+        val requestBody = EditMessageRequest(
+            chatId = chatId,
+            messageId = messageId,
+            text = message,
+        )
 
-    for (entry in data.entries) {
-        byteArrays.add(separator)
-        when (entry.value) {
-            is File -> {
-                val file = entry.value as File
-                val path = Path.of(file.toURI())
-                val mimeType = Files.probeContentType(path)
-                byteArrays.add(
-                    "\"${entry.key}\"; filename=\"${path.fileName}\"\r\nContent-Type: $mimeType\r\n\r\n".toByteArray(
-                        StandardCharsets.UTF_8
-                    )
-                )
-                byteArrays.add(Files.readAllBytes(path))
-                byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
-            }
-
-            else -> byteArrays.add("\"${entry.key}\"\r\n\r\n${entry.value}\r\n".toByteArray(StandardCharsets.UTF_8))
-        }
+        val requestBodyString = json.encodeToString(requestBody)
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create(sendUpdates))
+            .header("Content-Type", "application/json")  // добавь эту строку
+            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+            .build()
+        val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
+        response.body()
     }
-    byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
-
-    this.header("Content-Type", "multipart/form-data;boundary=$boundary")
-        .POST(HttpRequest.BodyPublishers.ofByteArrays(byteArrays))
-    return this
 }
+
+    private fun HttpRequest.Builder.postMultipartFormData(
+        boundary: String,
+        data: Map<String, Any>
+    ): HttpRequest.Builder {
+        val byteArrays = ArrayList<ByteArray>()
+        val separator = "--$boundary\r\nContent-Disposition: form-data; name=".toByteArray(StandardCharsets.UTF_8)
+
+        for (entry in data.entries) {
+            byteArrays.add(separator)
+            when (entry.value) {
+                is File -> {
+                    val file = entry.value as File
+                    val path = Path.of(file.toURI())
+                    val mimeType = Files.probeContentType(path)
+                    byteArrays.add(
+                        "\"${entry.key}\"; filename=\"${path.fileName}\"\r\nContent-Type: $mimeType\r\n\r\n".toByteArray(
+                            StandardCharsets.UTF_8
+                        )
+                    )
+                    byteArrays.add(Files.readAllBytes(path))
+                    byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
+                }
+
+                else -> byteArrays.add("\"${entry.key}\"\r\n\r\n${entry.value}\r\n".toByteArray(StandardCharsets.UTF_8))
+            }
+        }
+        byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
+
+        this.header("Content-Type", "multipart/form-data;boundary=$boundary")
+            .POST(HttpRequest.BodyPublishers.ofByteArrays(byteArrays))
+        return this
+    }

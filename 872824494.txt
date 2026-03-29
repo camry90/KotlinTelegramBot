@@ -1,20 +1,20 @@
 towel|полотенце|0|towel.jpg|AgACAgIAAxkDAAIDRWnESd1WjM57SxlsuY-Hr4SzGByqAAKyFmsbPP0gSlsedfO37GSMAQADAgADeQADOgQ
 carrot|марковь|0|carrot.jpg|AgACAgIAAxkDAAIDA2nBpKE18hoZ93t3M7rvGc-l3PfgAAJbGWsbhTsJSjFIcUtUDv6dAQADAgADeQADOgQ
 feature|особенность|0||
-rumour|слух|0||
-bay|бухта|0|bay.jpg|
+rumour|слух|1||
+bay|бухта|2|bay.jpg|AgACAgIAAxkDAAIDwWnJg16qpEF2ZvOKc4EXHcCHDY2zAAJPGmsbEItJSqGVv2nLgmR4AQADAgADdwADOgQ
 field|поле|0|field.jpg|
-van|фургон|0|van.jpg|AgACAgIAAxkDAAIDL2nC33n0kSCbbkfJw2VYZxDdT5EuAAIgEmsbKCQYSrrvbyBU9SPhAQADAgADeQADOgQ
-rabbit|кролик|0|rabbit.jpg|AgACAgIAAxkDAAIDU2nESh394QYYhpHSyvMltUDcGbxIAAK5FmsbPP0gSnuA6m86IC_7AQADAgADeQADOgQ
+van|фургон|3|van.jpg|AgACAgIAAxkDAAIDL2nC33n0kSCbbkfJw2VYZxDdT5EuAAIgEmsbKCQYSrrvbyBU9SPhAQADAgADeQADOgQ
+rabbit|кролик|1|rabbit.jpg|AgACAgIAAxkDAAIDU2nESh394QYYhpHSyvMltUDcGbxIAAK5FmsbPP0gSnuA6m86IC_7AQADAgADeQADOgQ
 radish|редиска|0|radish.jpg|AgACAgIAAxkDAAIDJmnC32yXDuZDFDsMtbzMh6pHnuL7AAIfEmsbKCQYStHpoMVBISF_AQADAgADeAADOgQ
-shrimps|креветки|0|shrimps.jpg|
-cathedral|собор|0|cathedral.jpg|AgACAgIAAxkDAAIDBmnBpKkyXAXMgyAj1FCvjje1vr1SAAJcGWsbhTsJSr58SW1munh1AQADAgADeQADOgQ
-kindergarten|детский сад|0|kindergarten.jpg|AgACAgIAAxkDAAIDDGnBpLf7DHwwsKk-G3sUopkaKvKzAAJeGWsbhTsJSniu6eTd6VWdAQADAgADdwADOgQ
-skyscraper|небоскреб|0|skyscraper.jpg|AgACAgIAAxkDAAIDUGnEShhBwJNPkFanmht1XWfbsfn0AAK4FmsbPP0gSk-CSr6-FSInAQADAgADeQADOgQ
+shrimps|креветки|0|shrimps.jpg|AgACAgIAAxkDAAID3GnJg5O2C0Al3sAo3tnRmdDHQNgGAAJRGmsbEItJStuqeGwfNDoGAQADAgADeAADOgQ
+cathedral|собор|1|cathedral.jpg|AgACAgIAAxkDAAIDBmnBpKkyXAXMgyAj1FCvjje1vr1SAAJcGWsbhTsJSr58SW1munh1AQADAgADeQADOgQ
+kindergarten|детский сад|2|kindergarten.jpg|AgACAgIAAxkDAAIDDGnBpLf7DHwwsKk-G3sUopkaKvKzAAJeGWsbhTsJSniu6eTd6VWdAQADAgADdwADOgQ
+skyscraper|небоскреб|1|skyscraper.jpg|AgACAgIAAxkDAAIDUGnEShhBwJNPkFanmht1XWfbsfn0AAK4FmsbPP0gSk-CSr6-FSInAQADAgADeQADOgQ
 beaver|бобр|0||
-crow|ворона|0||
+crow|ворона|1||
 ant|муравей|0||
-judge|судья|0||
+judge|судья|1||
 painter|художник|0||
-sailor|моряк|0||
+sailor|моряк|1||
 stuntman|каскадер|0||
