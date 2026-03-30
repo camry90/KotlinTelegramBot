@@ -26,7 +26,7 @@ const val BOT_FILE_URL = "https://api.telegram.org/file/bot"
 class TelegramBotService(private val botToken: String) {
 
     private val client: HttpClient = HttpClient.newBuilder().build()
-    val dynamicMessage = DynamicMessage()
+    private val dynamicMessage = DynamicMessage()
 
     fun getUpdates(updateId: Long): String {
         val urlGetUpdates = "$BASIC_URL$botToken/getUpdates?offset=$updateId"
@@ -228,40 +228,56 @@ class TelegramBotService(private val botToken: String) {
             .header("Content-Type", "application/json")  // добавь эту строку
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
-        val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
-        response.body()
+        try {
+            val response = this.client.send(request, HttpResponse.BodyHandlers.ofString())
+            val body = response.body()
+            when {
+                body.contains("MESSAGE_NOT_MODIFIED") -> println("Текст не изменился")
+                body.contains("MESSAGE_EDIT_TIME_EXPIRED") -> println("Время редактирования истекло")
+            }
+        } catch (e: Exception) {
+            println("Ошибка редактирования: ${e.message}")
+        }
+    }
+
+    fun saveMessageId(chatId: Long, messageId: Long) {
+        dynamicMessage.saveMessage(chatId, messageId)
+    }
+
+    fun getMessageId(chatId: Long): Long? {
+        return dynamicMessage.getMessage(chatId)
     }
 }
 
-    private fun HttpRequest.Builder.postMultipartFormData(
-        boundary: String,
-        data: Map<String, Any>
-    ): HttpRequest.Builder {
-        val byteArrays = ArrayList<ByteArray>()
-        val separator = "--$boundary\r\nContent-Disposition: form-data; name=".toByteArray(StandardCharsets.UTF_8)
+private fun HttpRequest.Builder.postMultipartFormData(
+    boundary: String,
+    data: Map<String, Any>
+): HttpRequest.Builder {
+    val byteArrays = ArrayList<ByteArray>()
+    val separator = "--$boundary\r\nContent-Disposition: form-data; name=".toByteArray(StandardCharsets.UTF_8)
 
-        for (entry in data.entries) {
-            byteArrays.add(separator)
-            when (entry.value) {
-                is File -> {
-                    val file = entry.value as File
-                    val path = Path.of(file.toURI())
-                    val mimeType = Files.probeContentType(path)
-                    byteArrays.add(
-                        "\"${entry.key}\"; filename=\"${path.fileName}\"\r\nContent-Type: $mimeType\r\n\r\n".toByteArray(
-                            StandardCharsets.UTF_8
-                        )
+    for (entry in data.entries) {
+        byteArrays.add(separator)
+        when (entry.value) {
+            is File -> {
+                val file = entry.value as File
+                val path = Path.of(file.toURI())
+                val mimeType = Files.probeContentType(path)
+                byteArrays.add(
+                    "\"${entry.key}\"; filename=\"${path.fileName}\"\r\nContent-Type: $mimeType\r\n\r\n".toByteArray(
+                        StandardCharsets.UTF_8
                     )
-                    byteArrays.add(Files.readAllBytes(path))
-                    byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
-                }
-
-                else -> byteArrays.add("\"${entry.key}\"\r\n\r\n${entry.value}\r\n".toByteArray(StandardCharsets.UTF_8))
+                )
+                byteArrays.add(Files.readAllBytes(path))
+                byteArrays.add("\r\n".toByteArray(StandardCharsets.UTF_8))
             }
-        }
-        byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
 
-        this.header("Content-Type", "multipart/form-data;boundary=$boundary")
-            .POST(HttpRequest.BodyPublishers.ofByteArrays(byteArrays))
-        return this
+            else -> byteArrays.add("\"${entry.key}\"\r\n\r\n${entry.value}\r\n".toByteArray(StandardCharsets.UTF_8))
+        }
     }
+    byteArrays.add("--$boundary--".toByteArray(StandardCharsets.UTF_8))
+
+    this.header("Content-Type", "multipart/form-data;boundary=$boundary")
+        .POST(HttpRequest.BodyPublishers.ofByteArrays(byteArrays))
+    return this
+}

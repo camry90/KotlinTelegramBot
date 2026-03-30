@@ -224,7 +224,7 @@ fun handleUpdate(
                 chatId,
                 "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
             )
-            messageId?.let { botService.dynamicMessage.saveMessage(chatId, it) }
+            messageId?.let { botService.saveMessageId(chatId, it) }
         }
 
         data == CALLBACK_DATA_LEARN_WORDS -> {
@@ -243,7 +243,7 @@ fun handleUpdate(
                 FlagAnswer.RIGHT_ANSWER -> {
                     botService.sendMessage(json, chatId, "Правильно!")
                     val statistics = trainer.getStatistics()
-                    val messageId = botService.dynamicMessage.getMessage(chatId)
+                    val messageId = botService.getMessageId(chatId)
                     if (messageId != null) {
                         botService.editMessage(
                             chatId,
