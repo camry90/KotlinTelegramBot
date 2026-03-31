@@ -23,11 +23,21 @@ data class Message(
     val chat: Chat? = null,
     @SerialName("document")
     val document: Document? = null,
+    @SerialName("message_id")
+    val messageId: Long? = null,
 )
 
 @Serializable
 data class Response(
     val result: List<Update> = emptyList(),
+)
+
+@Serializable
+data class SendMessageResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: Message? = null,
 )
 
 @Serializable
@@ -138,6 +148,16 @@ data class SendPhotoRequest(
     val hasSpoiler: Boolean = false,
 )
 
+@Serializable
+data class EditMessageRequest(
+    @SerialName("chat_id")
+    val chatId: Long?,
+    @SerialName("message_id")
+    val messageId: Long,
+    @SerialName("text")
+    val text: String,
+)
+
 fun main(args: Array<String>) {
 
     val json = Json {
@@ -199,11 +219,12 @@ fun handleUpdate(
 
         data == CALLBACK_DATA_STATISTICS -> {
             val statistics = trainer.getStatistics()
-            botService.sendMessage(
+            val messageId = botService.sendMessage(
                 json,
                 chatId,
                 "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n"
             )
+            messageId?.let { botService.saveMessageId(chatId, it) }
         }
 
         data == CALLBACK_DATA_LEARN_WORDS -> {
@@ -221,6 +242,16 @@ fun handleUpdate(
             when (trainer.checkAnswer(index)) {
                 FlagAnswer.RIGHT_ANSWER -> {
                     botService.sendMessage(json, chatId, "Правильно!")
+                    val statistics = trainer.getStatistics()
+                    val messageId = botService.getMessageId(chatId)
+                    if (messageId != null) {
+                        botService.editMessage(
+                            chatId,
+                            messageId,
+                            "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%\n",
+                            json
+                        )
+                    }
                     questions[chatId] = botService.checkNextQuestionAndSend(trainer, botService, chatId, json)
                 }
 
