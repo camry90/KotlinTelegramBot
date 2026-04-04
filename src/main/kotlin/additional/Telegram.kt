@@ -194,7 +194,7 @@ fun handleUpdate(
     val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
     val data = update.callbackQuery?.data
     val currentQuestion: Question? = questions[chatId]
-    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(DatabaseUserDictionary(chatId)) }
     val messageDocument = update.message?.document
 
     if( messageDocument != null ) {
@@ -203,7 +203,7 @@ fun handleUpdate(
         val response: GetFileResponse = json.decodeFromString(jsonResponse)
         response.result?.let {
             botService.downloadFile(it.filePath, it.fileUniqueId)
-            trainer.readFile(it.fileUniqueId)
+            updateDictionary(File(it.fileUniqueId))
         }
     }
 
