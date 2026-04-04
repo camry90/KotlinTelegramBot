@@ -136,7 +136,9 @@ class TelegramBotService(private val botToken: String) {
                     val sendPhotoResponse: SendPhotoResponse = json.decodeFromString(response)
                     val fileId = sendPhotoResponse.result?.photo?.last()?.fileId
                     correctWord.fileId = fileId
-                    trainer.saveDictionary()
+                    if (fileId != null) {
+                        trainer.dictionary.saveFileId(correctWord.original, fileId)
+                    }
                 }
             }
             telegramBotService.sendQuestion(json, chatId, question)
