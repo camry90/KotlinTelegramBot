@@ -3,6 +3,7 @@ package additional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.Closeable
 import java.io.File
 
 @Serializable
@@ -167,6 +168,12 @@ fun main(args: Array<String>) {
     var lastUpdateId = 0L
     val trainers = HashMap<Long, LearnWordsTrainer>()
     val questions = HashMap<Long, Question?>()
+
+    Runtime.getRuntime().addShutdownHook(Thread {
+        trainers.values.forEach { trainer ->
+            (trainer.dictionary as? Closeable)?.close()
+        }
+    })
 
     while (true) {
         Thread.sleep(1000)

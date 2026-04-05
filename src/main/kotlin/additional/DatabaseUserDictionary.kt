@@ -1,14 +1,19 @@
 package additional
 
+import java.io.Closeable
 import java.sql.DriverManager
 
 class DatabaseUserDictionary(
     private val chatId: Long,
     private val dbFilePath: String = "data.db",
     private val learningThreshold: Int = 3,
-) : IUserDictionary {
+) : IUserDictionary, Closeable {
 
     private val connection = DriverManager.getConnection("jdbc:sqlite:$dbFilePath")
+
+    override fun close() {
+        connection.close()
+    }
 
     override fun getSize(): Int {
         val statement = connection.createStatement()
