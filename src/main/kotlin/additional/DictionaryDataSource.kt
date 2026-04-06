@@ -33,7 +33,7 @@ fun updateDictionary(wordsFile: File) {
                     "id" integer PRIMARY KEY AUTOINCREMENT,
                     "username" varchar,
                     "created_at" timestamp,
-                    "chat_id" varchar
+                    "chat_id" varchar UNIQUE
                     );
                 """.trimIndent()
             )

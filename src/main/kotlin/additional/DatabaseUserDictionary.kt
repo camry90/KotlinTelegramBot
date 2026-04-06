@@ -112,11 +112,12 @@ class DatabaseUserDictionary(
 
     private fun getUserId(): Int {
         return connection.createStatement().use { stmt ->
-            stmt.executeQuery("SELECT id FROM users WHERE chat_id = $chatId").use { rs ->
-                if (rs.next()) {
-                    return@use rs.getInt("id")
-                }
+            val existingId = stmt.executeQuery(
+                "SELECT id FROM users WHERE chat_id = $chatId"
+            ).use { rs ->
+                if (rs.next()) rs.getInt("id") else null
             }
+            if (existingId != null) return@use existingId
             stmt.executeUpdate(
                 "INSERT INTO users(chat_id, created_at) VALUES($chatId, datetime('now'))"
             )
