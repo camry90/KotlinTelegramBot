@@ -44,6 +44,7 @@ fun updateDictionary(wordsFile: File) {
                     "word_id" integer,
                     "correct_answer_count" integer,
                     "updated_at" timestamp,
+                    PRIMARY KEY (user_id, word_id),
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY(word_id) REFERENCES words(id)
                     );
