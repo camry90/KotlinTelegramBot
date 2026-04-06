@@ -32,30 +32,30 @@ data class Question(
 )
 
 class LearnWordsTrainer(
-    private val fileName: String = FILE_NAME,
+    val dictionary: IUserDictionary,
     val learnedAnswerCount: Int = 3,
     val questionOfWords: Int = 4
 ) {
 
     private var question: Question? = null
-    private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
-        val learnedCount = dictionary.filter { it.correctAnswerCount >= learnedAnswerCount }.size
-        val totalCount = dictionary.count()
+        val learnedCount = dictionary.getNumOfLearnedWords()
+        val totalCount = dictionary.getSize()
         val percent = if (totalCount > 0) learnedCount * 100 / totalCount else 0
         return Statistics(learnedCount, totalCount, percent)
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswerCount < learnedAnswerCount }
+        val notLearnedList = dictionary.getUnlearnedWords()
         if (notLearnedList.isEmpty()) return null
 
         val correctAnswer = notLearnedList.map { it.translate }
             .random()
         val correctWord = notLearnedList.find { it.translate == correctAnswer }
 
-        val questionWords = dictionary.map { it.translate }
+        val questionWords = dictionary.getUnlearnedWords().map { it.translate }
+            .plus(dictionary.getLearnedWords().map { it.translate })
             .distinct()
             .filter { it != correctAnswer }
             .shuffled()
@@ -72,10 +72,9 @@ class LearnWordsTrainer(
         return when (userAnswerInput) {
             correctAnswerId?.plus(1) -> {
                 question?.correctWord?.let { word ->
-                    val updatedWord = word.copy(correctAnswerCount = word.correctAnswerCount + 1)
-                    dictionary[dictionary.indexOf(word)] = updatedWord
+                    val current = dictionary.getCorrectAnswersCount(word.original)
+                    dictionary.setCorrectAnswersCount(word.original, current + 1)
                 }
-                saveDictionary()
                 FlagAnswer.RIGHT_ANSWER
             }
 
@@ -85,95 +84,8 @@ class LearnWordsTrainer(
         }
     }
 
-    private fun loadDictionary(): MutableList<Word> {
-        val wordsFile = File(fileName)
-        if (!wordsFile.exists()) {
-            File(FILE_NAME).copyTo(wordsFile)
-        }
-
-        val dictionary: MutableList<Word> = mutableListOf()
-
-        try {
-            for (line in wordsFile.readLines()) {
-                val parts = line.split("|")
-                if (parts.size < 2) continue
-                val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                val image = parts.getOrNull(3)?.ifEmpty { null }
-                val fileIdCheck = parts.getOrNull(4)?.ifEmpty { null }
-                val word = Word(parts[0], parts[1], correct, imageHint = image, fileId = fileIdCheck)
-                dictionary.add(word)
-            }
-
-            if (fileName != FILE_NAME) {
-                val masterWords = loadMasterDictionary()
-                var updated = false
-                dictionary.replaceAll { word ->
-                    if (word.imageHint == null) {
-                        val master = masterWords.find { it.original == word.original }
-                        if (master?.imageHint != null) {
-                            updated = true
-                            word.copy(imageHint = master.imageHint)
-                        } else word
-                    } else word
-                }
-                if (updated) {
-                    val string = dictionary.joinToString(separator = "\n") {
-                        "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint ?: ""}|${it.fileId ?: ""}"
-                    }
-                    File(fileName).writeText(string)
-                }
-            }
-        } catch (e: FileNotFoundException) {
-            println("Ошибка вывода строки: ${e.message}")
-        }
-        return dictionary
-    }
-
-    private fun loadMasterDictionary(): List<Word> {
-        val result = mutableListOf<Word>()
-        try {
-            for (line in File(FILE_NAME).readLines()) {
-                val parts = line.split("|")
-                if (parts.size < 2) continue
-                val image = parts.getOrNull(3)?.ifEmpty { null }
-                result.add(Word(parts[0], parts[1], imageHint = image))
-            }
-        } catch (e: FileNotFoundException) {
-            println("Мастер-словарь не найден: ${e.message}")
-        }
-        return result
-    }
-
-    fun saveDictionary() {
-        val string = dictionary.joinToString(separator = "\n") { it ->
-            "${it.original}|${it.translate}|${it.correctAnswerCount}|${it.imageHint ?: ""}|${it.fileId ?: ""}"
-        }
-        File(fileName).writeText(string)
-    }
-
     fun resetProgress() {
-        dictionary.forEach { it.correctAnswerCount = 0 }
-        saveDictionary()
+        dictionary.resetUserProgress()
     }
 
-    fun readFile(fileUniqueId: String) {
-        val wordsFile = File(fileUniqueId)
-
-        try {
-            for (line in wordsFile.readLines()) {
-                val parts = line.split("|")
-                if (parts.size < 2) continue
-                val correct = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                val image = parts.getOrNull(3)?.ifEmpty { null }
-                val fileIdCheck = parts.getOrNull(4)?.ifEmpty { null }
-                val word = Word(parts[0], parts[1], correct, imageHint = image, fileId = fileIdCheck)
-                if (dictionary.none { it.original == word.original }) {
-                    dictionary.add(word)
-                }
-            }
-            saveDictionary()
-        } catch (e: FileNotFoundException) {
-            println("Ошибка вывода строки: ${e.message}")
-        }
-    }
 }
