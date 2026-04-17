@@ -3,6 +3,7 @@ package additional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.Closeable
 import java.io.File
 
 @Serializable
@@ -168,6 +169,12 @@ fun main(args: Array<String>) {
     val trainers = HashMap<Long, LearnWordsTrainer>()
     val questions = HashMap<Long, Question?>()
 
+    Runtime.getRuntime().addShutdownHook(Thread {
+        trainers.values.forEach { trainer ->
+            (trainer.dictionary as? Closeable)?.close()
+        }
+    })
+
     while (true) {
         Thread.sleep(1000)
         val responseString: String = botService.getUpdates(lastUpdateId)
@@ -194,7 +201,7 @@ fun handleUpdate(
     val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
     val data = update.callbackQuery?.data
     val currentQuestion: Question? = questions[chatId]
-    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(DatabaseUserDictionary(chatId)) }
     val messageDocument = update.message?.document
 
     if( messageDocument != null ) {
@@ -203,7 +210,7 @@ fun handleUpdate(
         val response: GetFileResponse = json.decodeFromString(jsonResponse)
         response.result?.let {
             botService.downloadFile(it.filePath, it.fileUniqueId)
-            trainer.readFile(it.fileUniqueId)
+            updateDictionary(File(it.fileUniqueId))
         }
     }
 
