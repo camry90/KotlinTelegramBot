@@ -144,8 +144,8 @@ class DatabaseUserDictionary(
             stmt.executeUpdate()
         }
 
-        return connection.createStatement().use { stmt ->
-            stmt.executeQuery("SELECT last_insert_rowid()").use { rs ->
+        return connection.prepareStatement("SELECT last_insert_rowid()").use { stmt ->
+            stmt.executeQuery().use { rs ->
                 rs.getInt(1)
             }
         }
